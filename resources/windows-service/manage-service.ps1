@@ -292,7 +292,7 @@ try {
             }
             Write-ServiceXml $newDirectory
             if ($Action -eq 'install') {
-                $gui = Get-CimInstance Win32_Process -Filter "Name='frpc.exe'" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($GuiConfig) }
+                $gui = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($GuiConfig) -and $_.Name -ne 'powershell.exe' }
                 if ($gui) { throw 'SERVICE_STOP_GUI_FIRST' }
             }
             if ($Action -eq 'install') { Invoke-Wrapper 'install' }

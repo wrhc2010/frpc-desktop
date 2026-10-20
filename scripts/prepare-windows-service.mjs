@@ -50,6 +50,8 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
 ) {
-  await prepareWindowsService();
-  console.log(`WinSW ${WINSW_VERSION}: SHA-256 verified`);
+  if (process.platform === "win32") {
+    await prepareWindowsService();
+    console.log(`WinSW ${WINSW_VERSION}: SHA-256 verified`);
+  }
 }

@@ -65,7 +65,22 @@ Windows 客户端现在可以把 frpc 安装为 `FrpcDesktopService` 系统服�
 
 服务管理需要管理员确认；服务账户只获得服务目录的读取权限和日志目录的写入权限。若同名服务、链接目录或权限不符合预期，程序会拒绝覆盖并显示错误。
 
-当前开发环境无法获得 Hyper-V 客机权限，本次未在宿主机安装或运行测试服务，也未验证注销、重启后未登录场景。请在隔离 Windows 客机或目标用户机器上验证安装、异常恢复、卸载和无人值守运行。
+服务管理已接入 Tauri 2 后端，兼容已下载版本、Electron 1.x 旧文件名及自定义 frpc 可执行文件。2026-10-20 已在 Windows 本机使用独立配置和回环隧道验证安装、启动/停止、LocalService 身份、会话 0、延迟自动启动设置、目录权限、进程崩溃恢复、失败更新回滚、运行中/停止时更新、卸载清理及损坏 WinSW 拒绝。测试结束后已清除测试服务和部署目录，未改动原有客户端。
+
+注销、重启以及重启后未登录时的隧道连通性仍未实测，需在隔离 Windows 客机或目标机器上补充验证。
+
+Tauri Windows 应用已通过 `tauri build --debug --no-bundle` 编译；GUI/UAC 完整交互和新安装包安装后的资源布局尚未验证。
+
+可复现的管理员集成测试位于 `tests/windows-service.integration.ps1`。运行前执行 `npm run prepare:windows-service`，并准备包含 `frpc.exe` 和 `frps.exe` 的目录。以管理员 PowerShell 执行以下命令；工作目录必须尚不存在，调用者 SID 应为使用客户端的用户：
+
+```powershell
+.\tests\windows-service.integration.ps1 `
+  -FrpDirectory 'E:\frp-test\frp_0.68.1_windows_amd64' `
+  -WorkDirectory 'E:\frp-test\run-01' `
+  -CallerSid ([Security.Principal.WindowsIdentity]::GetCurrent().User.Value)
+```
+
+脚本拒绝覆盖已有服务及部署目录，仅使用本机回环隧道，结束后卸载测试服务，并在工作目录写入 `integration-result.json`。测试工作目录可整体清理。
 
 ### Windows unattended service (English)
 
@@ -73,14 +88,24 @@ The Windows client can install `frpc` as the `FrpcDesktopService` system service
 
 Save the configuration first, then use **Install service**, **Start/Stop service**, **Update service config**, and **Uninstall service** in Settings. Service snapshots and logs live under `%ProgramData%\FrpcDesktopService`; certificate and key references are copied into the snapshot and the original files are kept. Updating the desktop settings does not change an installed snapshot until **Update service config** is used.
 
-Service management requires an administrator confirmation. The feature was not exercised on the host machine or in an isolated Windows VM in this development environment; logon, reboot, recovery, and unattended tunnel behavior still require external verification.
+Service management requires administrator confirmation. A Windows loopback integration test verified installation, LocalService/session 0, ACLs, crash recovery, snapshot updates/rollback and removal on 2026-10-20. Logoff, reboot and pre-logon tunnel connectivity remain unverified. The opt-in administrator harness is `tests/windows-service.integration.ps1`.
 
+
+## 开发
+
+环境要求：Node.js 22.12+、npm 和稳定版 Rust 工具链（参见 [Tauri 环境准备](https://v2.tauri.app/zh-cn/start/prerequisites/)）。
+
+```sh
+npm ci
+npm run tauri:dev    # 以开发模式运行桌面应用
+npm run tauri:build  # 为当前平台构建安装包
+```
 
 ## 常见问题
 
-### macOS universal 构建在 better-sqlite3 预编译文件处失败
+### 从 1.x 升级
 
-使用 electron-builder 26 构建时，请保留 `electron-builder.json5` 中的 `mac.x64ArchFiles` 规则。该规则允许 better-sqlite3 随包携带、在两个架构包中内容相同的 `darwin-x64.node` 和 `darwin-arm64.node` 保留在 universal 应用中，运行时由 better-sqlite3 选择匹配的架构文件。在 macOS 上运行 `npm run build:electron:mac` 重新构建。
+2.0 版本基于 Tauri 重构，可直接覆盖升级 1.x 的 Electron 版本。服务器配置、代理、系统设置和已下载的 frpc 版本会自动保留；仍为旧 NeDB 格式的数据（1.2.6 及更早版本）会在首次启动时导入，原文件以 `*.bak` 保留。
 
 ## 里程碑
 

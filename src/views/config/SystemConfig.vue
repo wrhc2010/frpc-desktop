@@ -4,7 +4,7 @@ import { useI18n } from "vue-i18n";
 import { onMounted, onUnmounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { on, send } from "@/utils/ipcUtils";
-import { ipcRouters } from "../../../electron/core/IpcRouter";
+import { ipcRouters } from "@/core/IpcRouter";
 
 const formData = defineModel<OpenSourceFrpcDesktopServer>({ required: true });
 const emit = defineEmits<{

@@ -56,17 +56,33 @@ Windows 客户端可以把 frpc 安装为 `FrpcDesktopService` 系统服务，�
 
 在设置页保存配置后，点击 **Install service** 并确认 UAC；随后可以启动、停止、更新服务配置或卸载服务。服务专用配置、证书副本和日志位于 `%ProgramData%\FrpcDesktopService`。更新设置后要再次点击 **Update service config**；卸载不会删除客户端数据库、原始配置或已下载版本。引用的证书和私钥会复制到服务快照，原文件保持不变。
 
-安装、更新和卸载需要管理员确认。程序拒绝覆盖同名服务、链接目录或不安全权限。当前开发环境无法访问隔离 Hyper-V 客机，因此没有在宿主机安装或运行测试服务，也未宣称注销、重启和异常恢复场景已验证。
+安装、更新和卸载需要管理员确认。程序拒绝覆盖同名服务、链接目录或不安全权限。服务管理已接入 Tauri 2 后端，兼容已下载版本、Electron 1.x 旧文件名及自定义 frpc 可执行文件。
+
+2026-10-20 已在 Windows 本机用独立配置和回环隧道验证：安装、启动/停止、LocalService 身份、会话 0、延迟自动启动设置、目录权限、进程崩溃恢复、失败更新回滚、运行中/停止时更新、卸载清理及损坏 WinSW 拒绝。测试未改动原有客户端；注销、重启和重启后未登录时的隧道连通性尚未实测。
+
+Tauri Windows 应用已通过 `tauri build --debug --no-bundle` 编译；GUI/UAC 完整交互和新安装包安装后的资源布局尚未验证。
+
+可复现的管理员集成测试位于 `tests/windows-service.integration.ps1`，需提供包含 `frpc.exe` 和 `frps.exe` 的目录、尚不存在的工作目录和调用者 SID。脚本仅使用本机回环地址，拒绝覆盖已有服务，结束后清理测试服务并输出 `integration-result.json`。
 
 ### Windows unattended service (English supplement)
 
-The Windows client can install `frpc` as `FrpcDesktopService`, running as `NT AUTHORITY\LocalService` so tunnels can start before any user logs in. Settings provides install, start, stop, snapshot update, and uninstall actions. Service data and logs are stored under `%ProgramData%\FrpcDesktopService`; referenced certificates and keys are copied into the service snapshot while the originals remain untouched. Administrator confirmation is required. VM and host service scenarios were not run in this environment and need external verification.
+The Windows client can install `frpc` as `FrpcDesktopService`, running as `NT AUTHORITY\LocalService` so tunnels can start before any user logs in. Settings provides install, start, stop, snapshot update, and uninstall actions. Service data and logs are stored under `%ProgramData%\FrpcDesktopService`; referenced certificates and keys are copied into the service snapshot while the originals remain untouched. Administrator confirmation is required. Windows loopback integration tests verified installation, LocalService/session 0, ACLs, crash recovery, snapshot updates/rollback and removal on 2026-10-20. Logoff, reboot and pre-logon tunnel connectivity remain unverified.
+
+## Development
+
+Requirements: Node.js 22.12+, npm, and a stable Rust toolchain ([Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)).
+
+```sh
+npm ci
+npm run tauri:dev    # run the desktop app in development mode
+npm run tauri:build  # build installers for the current platform
+```
 
 ## Common Issues
 
-### macOS universal build fails on better-sqlite3 prebuilds
+### Upgrading from 1.x
 
-Keep the `mac.x64ArchFiles` rule in `electron-builder.json5` when building with electron-builder 26. It allows the identical `darwin-x64.node` and `darwin-arm64.node` prebuilds shipped by better-sqlite3 to remain in the universal app; better-sqlite3 selects the matching binary at runtime. Run `npm run build:electron:mac` on macOS to rebuild.
+Version 2.0 is rebuilt on Tauri and upgrades the 1.x Electron app in place. Your server settings, proxies, desktop settings, and downloaded frpc versions are kept automatically; data still stored in the older NeDB format (1.2.6 and earlier) is imported on first launch and the original files are kept as `*.bak`.
 
 ### Mac shows app is damaged
 
