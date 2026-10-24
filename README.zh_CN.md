@@ -67,9 +67,9 @@ Windows 客户端现在可以把 frpc 安装为 `FrpcDesktopService` 系统服�
 
 服务管理已接入 Tauri 2 后端，兼容已下载版本、Electron 1.x 旧文件名及自定义 frpc 可执行文件。2026-10-20 已在 Windows 本机使用独立配置和回环隧道验证安装、启动/停止、LocalService 身份、会话 0、延迟自动启动设置、目录权限、进程崩溃恢复、失败更新回滚、运行中/停止时更新、卸载清理及损坏 WinSW 拒绝。测试结束后已清除测试服务和部署目录，未改动原有客户端。
 
-注销、重启以及重启后未登录时的隧道连通性仍未实测，需在隔离 Windows 客机或目标机器上补充验证。
+Windows x64 Release 安装包已在独立目录安装，安装后的客户端二进制与构建产物一致，WinSW 资源完整性检查通过。用户随后安装服务并重启；2026-10-21（UTC+08:00）日志确认重启后服务以 LocalService 在会话 0 运行，frpc 登录成功且三个代理注册成功。
 
-Tauri Windows 应用已通过 `tauri build --debug --no-bundle` 编译；GUI/UAC 完整交互和新安装包安装后的资源布局尚未验证。
+用户登录早于服务启动，因此注销和重启后未登录时的实际隧道连通性仍未验证，需在隔离 Windows 客机或目标机器上补充验证。代理注册成功不代表所有本地业务端口均可连接；本地业务应用也需要自行配置开机启动。GUI/UAC 完整交互流程尚未系统验证。
 
 可复现的管理员集成测试位于 `tests/windows-service.integration.ps1`。运行前执行 `npm run prepare:windows-service`，并准备包含 `frpc.exe` 和 `frps.exe` 的目录。以管理员 PowerShell 执行以下命令；工作目录必须尚不存在，调用者 SID 应为使用客户端的用户：
 
@@ -88,7 +88,7 @@ The Windows client can install `frpc` as the `FrpcDesktopService` system service
 
 Save the configuration first, then use **Install service**, **Start/Stop service**, **Update service config**, and **Uninstall service** in Settings. Service snapshots and logs live under `%ProgramData%\FrpcDesktopService`; certificate and key references are copied into the snapshot and the original files are kept. Updating the desktop settings does not change an installed snapshot until **Update service config** is used.
 
-Service management requires administrator confirmation. A Windows loopback integration test verified installation, LocalService/session 0, ACLs, crash recovery, snapshot updates/rollback and removal on 2026-10-20. Logoff, reboot and pre-logon tunnel connectivity remain unverified. The opt-in administrator harness is `tests/windows-service.integration.ps1`.
+Service management requires administrator confirmation. A Windows loopback integration test verified installation, LocalService/session 0, ACLs, crash recovery, snapshot updates/rollback and removal on 2026-10-20. The x64 release installer was installed in a separate directory and its binary and WinSW resource were verified. After the user installed the service and rebooted, logs on 2026-10-21 (UTC+08:00) confirmed service startup, frpc login and three successful proxy registrations. Login preceded service startup, so logoff and pre-logon tunnel connectivity remain unverified. Proxy registration does not establish connectivity to every local application; those applications need their own startup configuration. Full GUI/UAC interaction has not been systematically tested. The opt-in administrator harness is `tests/windows-service.integration.ps1`.
 
 
 ## 开发

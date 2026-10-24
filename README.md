@@ -58,15 +58,15 @@ Windows 客户端可以把 frpc 安装为 `FrpcDesktopService` 系统服务，�
 
 安装、更新和卸载需要管理员确认。程序拒绝覆盖同名服务、链接目录或不安全权限。服务管理已接入 Tauri 2 后端，兼容已下载版本、Electron 1.x 旧文件名及自定义 frpc 可执行文件。
 
-2026-10-20 已在 Windows 本机用独立配置和回环隧道验证：安装、启动/停止、LocalService 身份、会话 0、延迟自动启动设置、目录权限、进程崩溃恢复、失败更新回滚、运行中/停止时更新、卸载清理及损坏 WinSW 拒绝。测试未改动原有客户端；注销、重启和重启后未登录时的隧道连通性尚未实测。
+2026-10-20 已在 Windows 本机用独立配置和回环隧道验证：安装、启动/停止、LocalService 身份、会话 0、延迟自动启动设置、目录权限、进程崩溃恢复、失败更新回滚、运行中/停止时更新、卸载清理及损坏 WinSW 拒绝。测试结束后已清除测试服务和部署目录，未改动原有客户端。
 
-Tauri Windows 应用已通过 `tauri build --debug --no-bundle` 编译；GUI/UAC 完整交互和新安装包安装后的资源布局尚未验证。
+Windows x64 Release 安装包已在独立目录安装，安装后的客户端二进制与构建产物一致，WinSW 资源完整性检查通过。用户随后安装服务并重启；2026-10-21（UTC+08:00）日志确认重启后服务以 LocalService 在会话 0 运行，frpc 登录成功且三个代理注册成功。用户登录早于服务启动，因此注销和重启后未登录时的实际隧道连通性仍未验证；代理注册也不代表所有本地业务端口均可连接。GUI/UAC 完整交互流程尚未系统验证。
 
 可复现的管理员集成测试位于 `tests/windows-service.integration.ps1`，需提供包含 `frpc.exe` 和 `frps.exe` 的目录、尚不存在的工作目录和调用者 SID。脚本仅使用本机回环地址，拒绝覆盖已有服务，结束后清理测试服务并输出 `integration-result.json`。
 
 ### Windows unattended service (English supplement)
 
-The Windows client can install `frpc` as `FrpcDesktopService`, running as `NT AUTHORITY\LocalService` so tunnels can start before any user logs in. Settings provides install, start, stop, snapshot update, and uninstall actions. Service data and logs are stored under `%ProgramData%\FrpcDesktopService`; referenced certificates and keys are copied into the service snapshot while the originals remain untouched. Administrator confirmation is required. Windows loopback integration tests verified installation, LocalService/session 0, ACLs, crash recovery, snapshot updates/rollback and removal on 2026-10-20. Logoff, reboot and pre-logon tunnel connectivity remain unverified.
+The Windows client can install `frpc` as `FrpcDesktopService`, running as `NT AUTHORITY\LocalService` so tunnels can start before any user logs in. Settings provides install, start, stop, snapshot update, and uninstall actions. Service data and logs are stored under `%ProgramData%\FrpcDesktopService`; referenced certificates and keys are copied into the service snapshot while the originals remain untouched. Administrator confirmation is required. Windows loopback integration tests verified installation, LocalService/session 0, ACLs, crash recovery, snapshot updates/rollback and removal on 2026-10-20. The x64 release installer was installed in a separate directory and its binary and WinSW resource were verified. After the user installed the service and rebooted, logs on 2026-10-21 (UTC+08:00) confirmed service startup, frpc login and three successful proxy registrations. Login preceded service startup, so logoff and pre-logon tunnel connectivity remain unverified. Proxy registration does not establish connectivity to every local application. Full GUI/UAC interaction has not been systematically tested.
 
 ## Development
 
